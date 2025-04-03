@@ -9,6 +9,6 @@ for file in "$@";
                         strokes=$(cat $file | wc -l);
                         echo "$file -> $strokes";
                 else
-                        echo "$file does not exist"
+                        echo "$file => not found"
                 fi
         done
