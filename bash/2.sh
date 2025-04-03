@@ -17,6 +17,5 @@ find $file -maxdepth 1 ! -name $file -type d -exec basename {} \; | while read s
         do
                 filename=$2/$saved.txt;
                 touch $filename;
-                echo $(ls $1/$saved | wc -l) > $filename;
-                echo $(ls $1/$saved | wc -l);
+                echo "$(ls $1/$saved | wc -l)" >> $filename;
         done
