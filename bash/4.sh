@@ -3,13 +3,13 @@
 planet=$1
 
 case $planet in
-    	"Mercury") echo "Mercury - 0 moons" ;;
-   	"Venus") echo "Venus - 0 moons" ;;
-    	"Earth") echo "Earth - 1 moon" ;;
-    	"Mars") echo "Mars - 2 moons" ;;
-   	"Jupiter") echo "Jupiter - 79 moons" ;; 
-	"Saturn") echo "Saturn - 82 moons" ;;
-    	"Uranus") echo "Uranus - 27 moons" ;;
-    	"Neptune") echo "Neptune - 14 moons" ;;
-    	*) echo "Error: Planet $planet does not exist." ;;
+        "Mercury") echo "Mercury-0" ;;
+        "Venus") echo "Venus-0" ;;
+        "Earth") echo "Earth-1" ;;
+        "Mars") echo "Mars-2" ;;
+        "Jupiter") echo "Jupiter-98" ;;        
+        "Saturn") echo "Saturn-83" ;;
+        "Uranus") echo "Uranus-27" ;;
+        "Neptune") echo "Neptune-14" ;;
+        *) echo "Unknown planet" ;;
 esac
