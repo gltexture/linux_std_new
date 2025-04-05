@@ -14,5 +14,5 @@ do
         subdir_name=$(basename "$subdir")
         count=$(find "$subdir" -mindepth 1 -maxdepth 1 | wc -l)
         echo "$count" > "$directory/$subdir_name.txt"
-    fi
+    fi    
 done  
