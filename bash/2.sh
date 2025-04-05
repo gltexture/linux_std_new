@@ -1,21 +1,18 @@
 #!/bin/bash
 
-file=$1
-dirToWrite=$2
+directory=$1
 
-if ! test -d $file ; then
-        echo "256";
-        exit 1
+if [ ! -d "$directory" ]; then
+    echo "Error: Directory '$directory' does not exist."
+    exit 1
 fi
 
-if ! test -d $dirToWrite ; then
-        echo "256";
-        exit 1
-fi
-
-find $file -maxdepth 1 ! -name $file -type d -exec basename {} \; | while read saved;
-        do
-                filename=$2/$saved.txt;
-                touch $filename;
-                echo "$(ls $1/$saved | wc -l)" >> $filename;
-        done
+for subdir in "$directory"
+do
+    if [ -d "$subdir" ];
+  then
+        subdir_name=$(basename "$subdir")
+        count=$(find "$subdir" -mindepth 1 -maxdepth 1 | wc -l)
+        echo "$count" > "$directory/$subdir_name.txt"
+    fi
+done
