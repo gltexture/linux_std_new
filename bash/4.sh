@@ -3,7 +3,7 @@
 planet=$1
 
 case $planet in
-        "Mercury") echo "0" exit 1 ;;
+        "Mercury") echo "0" ;;
         "Venus") echo "0" ;;
         "Earth") echo "1" ;;
         "Mars") echo "2" ;;
