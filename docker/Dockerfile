@@ -12,10 +12,14 @@ RUN pip install --upgrade pip setuptools wheel && \
 RUN pip install .
 
 
-ENV PYTHONPATH=/app
 FROM builder as test
+ENV PYTHONPATH=/app
 ENV DATABASE_URL=postgresql://kubsu:kubsu@localhost:5432/kubsu
-CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q", "--postgresql-host", "localhost"]
+ENV POSTGRES_HOST=localhost
+ENV POSTGRES_USER=kubsu
+ENV POSTGRES_PASSWORD=kubsu
+ENV POSTGRES_DB=kubsu
+CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
 
 
 FROM python:3.10.2-slim
