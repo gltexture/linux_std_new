@@ -1,56 +1,52 @@
 import pytest
 import os
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from httpx import Client
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from src.main import app
 from src.models import User
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+asyncpg://kubsu:kubsu@localhost:5432/kubsu_test"
+    "DATABASE_URL",
+    "postgresql://kubsu:kubsu@localhost:5432/kubsu_test"
 )
 
-test_engine = create_async_engine(DATABASE_URL)
+test_engine = create_engine(DATABASE_URL)
 TestSessionLocal = sessionmaker(
-    bind=test_engine, 
-    class_=AsyncSession, 
+    bind=test_engine,
     expire_on_commit=False
 )
 
 @pytest.fixture(scope="session")
-async def init_db():
-    async with test_engine.begin() as conn:
-        await conn.run_sync(User.metadata.create_all)
+def init_db():
+    with test_engine.begin() as conn:
+        User.metadata.create_all(conn)
     yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(User.metadata.drop_all)
+    with test_engine.begin() as conn:
+        User.metadata.drop_all(conn)
 
 @pytest.fixture(scope="function")
-async def db():
-    async with TestSessionLocal() as session:
-        yield session
+def db():
+    session = TestSessionLocal()
+    yield session
+    session.close()
 
 @pytest.fixture(scope="function")
-async def test_client():
-    async with AsyncClient(
-        transport=ASGITransport(app=app), 
-        base_url="http://test"
-    ) as client:
+def test_client():
+    with Client(app=app, base_url="http://test") as client:
         yield client
 
 @pytest.fixture(autouse=True)
-async def clear_tables(db: AsyncSession):
-    async with db.begin():
-        await db.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE;"))
+def clear_tables(db):
+    with db.begin():
+        db.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE;"))
     yield
 
 @pytest.fixture
-async def user(db: AsyncSession) -> User:
+def user(db) -> User:
     user = User(name="John Doe")
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    db.commit()
+    db.refresh(user)
     return user
