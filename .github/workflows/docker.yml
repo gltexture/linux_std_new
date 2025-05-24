@@ -16,17 +16,24 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Podman
-        run: sudo apt-get update && sudo apt-get install -y podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
 
-      - name: Build and test
+      - name: Build test image
         working-directory: ./docker
         run: |
           podman build --target builder -t myapp:test .
-          podman run --rm myapp:test pytest tests/
 
-      - name: Build final image
+      - name: Run tests
         working-directory: ./docker
-        run: podman build -t myapp:latest .
+        run: |
+          podman run --rm myapp:test sh -c "pip install pytest && pytest"
+
+      - name: Build production image
+        working-directory: ./docker
+        run: |
+          podman build -t myapp:latest .
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.7
@@ -37,4 +44,8 @@ jobs:
           script: |
             podman stop app01 || true
             podman rm app01 || true
-            podman run -d --net=host --name app01 -p 8086:8086 myapp:latest
+            podman run -d \
+              --net=host \
+              --name app01 \
+              -p 60080:60080 \
+              myapp:latest
