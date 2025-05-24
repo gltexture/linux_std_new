@@ -8,7 +8,8 @@ COPY tests/ ./tests
 
 RUN pip install --upgrade pip setuptools wheel && \
     pip install . pytest-asyncio && \
-    pip install . httpx
+    pip install . httpx && \
+    pip install . sqlalchemy
 RUN pip install .
 
 FROM builder as test
@@ -20,6 +21,7 @@ WORKDIR /app
 
 COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /app/src ./src
 COPY src/ ./src
 
 ENV PYTHONPATH=/app
