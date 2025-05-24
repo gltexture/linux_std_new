@@ -23,37 +23,35 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build test image
-        run: docker build --target test -t myapp:test .
+        run: podman build --target test -t myapp:test .
 
       - name: Create network
-        run: docker network create test-net || true
+        run: podman network create test-net || true
 
       - name: Run PostgreSQL container
         run: |
-          docker run -d --rm --name test-postgres --network test-net \
+          podman run -d --rm --name test-postgres --network test-net \
             -e POSTGRES_USER=kubsu -e POSTGRES_PASSWORD=kubsu -e POSTGRES_DB=kubsu \
             postgres:15
 
       - name: Wait for Postgres to be ready
         run: |
           for i in {1..10}; do
-            docker exec test-postgres pg_isready -U kubsu && break || sleep 3;
+            podman exec test-postgres pg_isready -U kubsu && break || sleep 3;
           done
 
       - name: Run tests inside built image
-        env:
-          DATABASE_URL: postgresql+psycopg://kubsu:kubsu@test-postgres:5432/kubsu
         run: |
-          docker run --rm --network test-net -e DATABASE_URL myapp:test
+          podman run --rm --network test-net myapp:test
 
       - name: Stop Postgres container
-        run: docker stop test-postgres
+        run: podman stop test-postgres
 
       - name: Build final image
-        run: docker build -t myapp:latest .
+        run: podman build -t myapp:latest .
 
       - name: Push final image
-        run: docker push myapp:latest
+        run: podman push myapp:latest
 
       - name: Deploy to server
         if: success()
@@ -63,8 +61,8 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            docker pull myapp:latest
-            docker stop app01 || true
-            docker rm app01 || true
-            docker run -d --name app01 -p 8086:8086 myapp:latest
+            podman pull myapp:latest
+            podman stop app01 || true
+            podman rm app01 || true
+            podman run -d --net=host --name app01 -p 8086:8086 myapp:latest
 
