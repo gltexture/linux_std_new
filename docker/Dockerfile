@@ -1,5 +1,6 @@
 FROM python:3.10.2-slim as builder
 
+
 WORKDIR /app
 
 COPY pyproject.toml .
