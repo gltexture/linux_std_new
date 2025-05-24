@@ -15,35 +15,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build test image
+      - name: Build images
         working-directory: ./docker
         run: |
           podman build --target builder -t myapp:test .
-
-      - name: Prepare SSH connection
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
-
-      - name: Run tests on remote server
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          podman save myapp:test | ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "podman load"
-          
-          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
-          podman run --rm \
-            --net=host \
-            -e DATABASE_URL="postgresql://user:password@localhost:5432/db" \
-            myapp:test \
-            sh -c "pip install pytest && pytest"
-          EOF
-
-      - name: Build production image
-        working-directory: ./docker
-        run: |
           podman build -t myapp:latest .
+
+      - name: Run tests on server
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            podman save myapp:test | podman load
+            
+            podman run --rm \
+              --net=host \
+              myapp:test \
+              sh -c "pip install pytest && pytest"
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.7
