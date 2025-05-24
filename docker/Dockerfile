@@ -6,12 +6,9 @@ COPY src/ ./src
 COPY tests/ ./tests
 
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install . pytest-asyncio && \
-    pip install . httpx && \
-    pip install . sqlalchemy && \
-    pip install . psycopg2
-RUN pip install .
-
+    pip install psycopg2-binary && \
+    pip install -e . && \
+    pip install pytest-asyncio httpx sqlalchemy asyncpg pytest
 
 ENV PYTHONPATH=/app
 ENV DATABASE_URL=postgresql://kubsu:kubsu@localhost:5432/kubsu
