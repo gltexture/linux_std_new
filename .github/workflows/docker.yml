@@ -15,61 +15,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
-
       - name: Build images
         working-directory: ./docker
         run: |
           podman build --target builder -t myapp:test .
           podman build -t myapp:latest .
 
-      - name: Transfer test image to server
-        run: |
-          podman save myapp:test > myapp-test.tar
-          scp -o StrictHostKeyChecking=no \
-              -P ${{ secrets.DEPLOY_PORT || '22' }} \
-              myapp-test.tar \
-              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/
-
       - name: Run tests on server
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-              -p ${{ secrets.DEPLOY_PORT || '22' }} \
-              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-          podman load -i /tmp/myapp-test.tar
-          rm /tmp/myapp-test.tar
-          
-          podman run --rm \
-            --net=host \
-            -e DATABASE_URL="${{ secrets.TEST_DATABASE_URL }}" \
-            myapp:test \
-            sh -c "pip install pytest && pytest"
-          EOF
-
-      - name: Transfer production image to server
-        run: |
-          podman save myapp:latest > myapp-latest.tar
-          scp -o StrictHostKeyChecking=no \
-              -P ${{ secrets.DEPLOY_PORT || '22' }} \
-              myapp-latest.tar \
-              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            podman save myapp:test | podman load
+            podman run --rm \
+              --net=host \
+              -e DATABASE_URL="${{ secrets.TEST_DATABASE_URL }}" \
+              myapp:test \
+              sh -c "pip install pytest && pytest"
 
       - name: Deploy to server
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-              -p ${{ secrets.DEPLOY_PORT || '22' }} \
-              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-          podman load -i /tmp/myapp-latest.tar
-          rm /tmp/myapp-latest.tar
-          
-          podman stop app01 || true
-          podman rm app01 || true
-          podman run -d \
-            --net=host \
-            --name app01 \
-            -p 8086:8086 \
-            myapp:latest
-          EOF
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            podman stop app01 || true
+            podman rm app01 || true
+            podman run -d \
+              --net=host \
+              --name app01 \
+              -p 8086:8086 \
+              myapp:latest
