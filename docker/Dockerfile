@@ -14,7 +14,7 @@ RUN pip install .
 
 ENV PYTHONPATH=/app
 FROM builder as test
-CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
+CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q", "--host", "host.docker.internal"]
 
 
 
