@@ -2,7 +2,6 @@ FROM python:3.10.2-slim as builder
 
 WORKDIR /app
 
-COPY pyproject.toml setup.py .
 COPY src/ ./src
 COPY tests/ ./tests
 
