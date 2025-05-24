@@ -1,54 +1,40 @@
-import pytest
-import os
-from httpx import Client
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.database import AsyncSessionLocal, init_db as create_tables
 from src.main import app
 from src.models import User
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://kubsu:kubsu@localhost:5432/kubsu_test"
-)
 
-test_engine = create_engine(DATABASE_URL)
-TestSessionLocal = sessionmaker(
-    bind=test_engine,
-    expire_on_commit=False
-)
+@pytest_asyncio.fixture(scope="session")
+async def init_db() -> None:
+    await create_tables()
 
-@pytest.fixture(scope="session")
-def init_db():
-    with test_engine.begin() as conn:
-        User.metadata.create_all(conn)
-    yield
-    with test_engine.begin() as conn:
-        User.metadata.drop_all(conn)
 
-@pytest.fixture(scope="function")
-def db():
-    session = TestSessionLocal()
-    try:
+@pytest_asyncio.fixture(scope='function')
+async def db() -> AsyncSession:
+    async with AsyncSessionLocal() as session:
         yield session
-    finally:
-        session.close()
 
-@pytest.fixture(scope="function")
-def test_client():
-    with Client(app=app, base_url="http://test") as client:
+
+@pytest_asyncio.fixture(autouse=True)
+async def test_client():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
 
-@pytest.fixture(autouse=True)
-def clear_tables(db):
-    with db.begin():
-        db.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE;"))
-    yield
 
-@pytest.fixture
-def user(db) -> User:
+@pytest_asyncio.fixture(autouse=True)
+async def clear_table(init_db, db: AsyncSession) -> None:
+    await db.execute(text("TRUNCATE users;"))
+    await db.commit()
+
+
+@pytest_asyncio.fixture
+async def user(db: AsyncSession) -> User:
     user = User(name="John Doe")
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
