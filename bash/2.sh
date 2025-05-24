@@ -1,6 +1,5 @@
+#!/bin/bash
 
-<<<<<<< Updated upstream
-=======
 input_dir="$1"
 
 
@@ -17,5 +16,3 @@ for item in "$input_dir"/*; do
         echo "$count" > "${input_dir}/${name}.txt"
     fi
 done
-
->>>>>>> Stashed changes
