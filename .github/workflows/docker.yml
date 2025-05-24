@@ -23,7 +23,7 @@ jobs:
       - name: Run tests
         working-directory: ./docker
         run: |
-          podman run --rm myapp:test sh -c "pip install pytest && pytest"
+          podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
 
       - name: Build production image
         working-directory: ./docker
