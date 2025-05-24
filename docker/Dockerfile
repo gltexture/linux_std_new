@@ -6,7 +6,7 @@ COPY pyproject.toml .
 COPY src/ ./src
 COPY tests/ ./tests
 
-RUN pip install --upgrade pip setuptools wheel &&
+RUN pip install --upgrade pip setuptools wheel && \
 pip install -e . pytest-asyncio httpx sqlalchemy
 
 FROM builder as test
