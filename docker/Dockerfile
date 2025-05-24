@@ -15,6 +15,7 @@ RUN pip install .
 FROM builder as test
 ENV PYTHONPATH=/app
 WORKDIR /app
+COPY --from=builder /app/src ./src
 CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
 
 FROM python:3.10.2-slim
