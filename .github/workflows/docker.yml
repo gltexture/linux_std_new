@@ -14,21 +14,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Debug SSH key
-        run: |
-         echo "${{ secrets.DEPLOY_HOST }}"
-         echo "${{ secrets.DEPLOY_USER }}"
-         echo "${{ secrets.DEPLOY_PORT }}"
-         echo "${{ secrets.DEPLOY_SSH_KEY }}"
-
-      - name: Test raw SSH
-        run: |
-          ssh -vvv \
-          -p ${{ secrets.DEPLOY_PORT }} \
-          -i <(echo "${{ secrets.DEPLOY_SSH_KEY }}") \
-          ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-          "echo 'Success!'"
         
       - name: Test SSH connection
         uses: appleboy/ssh-action@v0.1.7
