@@ -1,12 +1,11 @@
-FROM python:3.10.2-slim as builder
-
 WORKDIR /app
 
 COPY pyproject.toml .
 COPY src/ ./src
 COPY tests/ ./tests
 
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install . pytest-asyncio
 RUN pip install .
 
 FROM builder as test
