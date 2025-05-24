@@ -5,7 +5,6 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
   workflow_dispatch:
 
 jobs:
@@ -16,55 +15,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Install Podman
+        run: sudo apt-get update && sudo apt-get install -y podman
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build test image
-        run: podman build --target test -t myapp:test .
-
-      - name: Create network
-        run: podman network create test-net || true
-
-      - name: Run PostgreSQL container
+      - name: Build and test
+        working-directory: ./docker
         run: |
-          podman run -d --rm --name test-postgres --network test-net \
-            -e POSTGRES_USER=kubsu -e POSTGRES_PASSWORD=kubsu -e POSTGRES_DB=kubsu \
-            postgres:15
-
-      - name: Wait for Postgres to be ready
-        run: |
-          for i in {1..10}; do
-            podman exec test-postgres pg_isready -U kubsu && break || sleep 3;
-          done
-
-      - name: Run tests inside built image
-        run: |
-          podman run --rm --network test-net myapp:test
-
-      - name: Stop Postgres container
-        run: podman stop test-postgres
+          podman build --target builder -t myapp:test .
+          podman run --rm myapp:test pytest tests/
 
       - name: Build final image
+        working-directory: ./docker
         run: podman build -t myapp:latest .
 
-      - name: Push final image
-        run: podman push myapp:latest
-
       - name: Deploy to server
-        if: success()
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            podman pull myapp:latest
             podman stop app01 || true
             podman rm app01 || true
             podman run -d --net=host --name app01 -p 8086:8086 myapp:latest
