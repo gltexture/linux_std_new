@@ -1,44 +1,46 @@
-name: docker
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
   workflow_dispatch:
 
 jobs:
-  build:
+  test-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      ...
 
-  test:
-    runs-on: ubuntu-latest
-    needs: [ build ]
-    container:
-      image: ...
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_DB: kubsu
-          POSTGRES_PASSWORD: kubsu
-          POSTGRES_PORT: 5432
-          POSTGRES_USER: kubsu
-        ports:
-          - 5432:5432
     steps:
-      ...
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [ test ]
-    steps:
-      ...
+      - name: Build test image
+        working-directory: ./docker
+        run: |
+          podman build --target builder -t myapp:test .
 
- verify:
-   runs-on: ubuntu-latest
-   steps:
-     ...
+      - name: Run tests
+        working-directory: ./docker
+        run: |
+          podman run --rm myapp:test sh -c "pip install pytest && pytest"
+
+      - name: Build production image
+        working-directory: ./docker
+        run: |
+          podman build -t myapp:latest .
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            podman stop app01 || true
+            podman rm app01 || true
+            podman run -d \
+              --net=host \
+              --name app01 \
+              -p 60080:60080 \
+              myapp:latest

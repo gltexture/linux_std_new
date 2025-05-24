@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+FROM python:3.10.2-slim as builder
+
+
+>>>>>>> a62773e00030a0af17a2e4684ac916c8fa41b3c7
 WORKDIR /app
 
 COPY pyproject.toml .
