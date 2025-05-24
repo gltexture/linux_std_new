@@ -14,8 +14,8 @@ RUN pip install .
 
 ENV PYTHONPATH=/app
 FROM builder as test
-CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q", "--host", "host.docker.internal"]
-
+ENV DATABASE_URL=postgresql://kubsu:kubsu@localhost:5432/kubsu
+CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q", "--postgresql-host", "localhost"]
 
 
 FROM python:3.10.2-slim
