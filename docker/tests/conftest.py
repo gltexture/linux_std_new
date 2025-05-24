@@ -29,8 +29,10 @@ def init_db():
 @pytest.fixture(scope="function")
 def db():
     session = TestSessionLocal()
-    yield session
-    session.close()
+    try:
+        yield session
+    finally:
+        session.close()
 
 @pytest.fixture(scope="function")
 def test_client():
