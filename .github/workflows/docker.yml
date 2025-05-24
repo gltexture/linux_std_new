@@ -20,10 +20,25 @@ jobs:
         run: |
           podman build --target builder -t myapp:test .
 
-      - name: Run tests
-        working-directory: ./docker
+      - name: Prepare SSH connection
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Run tests on remote server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
+          podman save myapp:test | ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "podman load"
+          
+          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+          podman run --rm \
+            --net=host \
+            -e DATABASE_URL="postgresql://user:password@localhost:5432/db" \
+            myapp:test \
+            sh -c "pip install pytest && pytest"
+          EOF
 
       - name: Build production image
         working-directory: ./docker
@@ -42,5 +57,5 @@ jobs:
             podman run -d \
               --net=host \
               --name app01 \
-              -p 60080:60080 \
+              -p 8086:8086 \
               myapp:latest
