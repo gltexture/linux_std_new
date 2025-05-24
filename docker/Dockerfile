@@ -7,7 +7,8 @@ COPY src/ ./src
 COPY tests/ ./tests
 
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install . pytest-asyncio
+    pip install . pytest-asyncio && \
+    pip install . httpx
 RUN pip install .
 
 FROM builder as test
