@@ -13,6 +13,8 @@ RUN pip install --upgrade pip setuptools wheel && \
 RUN pip install .
 
 FROM builder as test
+ENV PYTHONPATH=/app
+WORKDIR /app
 CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
 
 FROM python:3.10.2-slim
@@ -22,7 +24,6 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /app/src ./src
-COPY src/ ./src
 
 ENV PYTHONPATH=/app
 
