@@ -15,11 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Check SSH port accessibility
-        run: |
-          echo "Checking if SSH port is reachable..."
-          curl --fail telnet://${{ secrets.DEPLOY_HOST }}:22 || (echo "Port not reachable" && exit 1)
-
       - name: Test SSH connection
         uses: appleboy/ssh-action@v0.1.7
         with:
