@@ -15,14 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Test SSH connection
-        uses: glebarez/ssh@main
+      - name: Start SSH agent and add key
+        uses: webfactory/ssh-agent@v0.5.4
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          privateKey: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT }}
-          command: echo "SSH connection successful"
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo SSH connection successful"
 
       - name: Build images
         working-directory: ./docker
@@ -31,27 +31,14 @@ jobs:
           podman build -t myapp:latest .
 
       - name: Run tests on server
-        uses: glebarez/ssh@main
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          privateKey: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT }}
-          command: |
-            podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "podman run --net=host --rm myapp:test sh -c 'pip install pytest && pytest'"
 
       - name: Deploy to server
-        uses: glebarez/ssh@main
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          privateKey: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT }}
-          command: |
-            podman stop app01 || true
-            podman rm app01 || true
-            podman run -d \
-              --net=host \
-              --name app01 \
-              -p 8086:8086 \
-              myapp:latest
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
+            podman stop app01 || true &&
+            podman rm app01 || true &&
+            podman run -d --net=host --name app01 -p 8086:8086 myapp:latest
+          "
