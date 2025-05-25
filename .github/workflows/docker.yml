@@ -18,26 +18,30 @@ jobs:
       - name: Test SSH connection via plain ssh
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          USERNAME: ${{ secrets.DEPLOY_USER }}
           PORT: ${{ secrets.DEPLOY_PORT }}
           PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          # Сохраняем ключ и даём правильные права
+          # Сохраняем ключ
           echo "$PRIVATE_KEY" > key.pem
           chmod 600 key.pem
       
-          echo "Пробуем подключиться к $HOST:$PORT..."
-          if ssh \
-               -i key.pem \
-               -p "$PORT" \
-               -o BatchMode=yes \            # не запрашивать пароль
-               -o ConnectTimeout=15 \        # таймаут TCP-сборки
-               -o StrictHostKeyChecking=no \ # не требовать known_hosts
-               "$USER@$HOST" exit; then
+          echo "Пытаемся подключиться к ${HOST}:${PORT} как ${USERNAME}…"
+      
+          # Однострочный вызов ssh без backslashes и комментариев внутри
+          ssh -i key.pem \
+              -p "${PORT}" \
+              -o BatchMode=yes \
+              -o ConnectTimeout=15 \
+              -o StrictHostKeyChecking=no \
+              "${USERNAME}@${HOST}" exit
+          STATUS=$?
+      
+          if [ $STATUS -eq 0 ]; then
             echo "✅ SSH connection successful"
           else
-            echo "❌ SSH connection failed"
-            exit 1
+            echo "❌ SSH connection failed (exit code $STATUS)"
+            exit $STATUS
           fi
     
       - name: Test SSH connection
