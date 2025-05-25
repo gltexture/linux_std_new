@@ -50,10 +50,18 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build test image
-        run: docker build --target test -t myapp:test .
+        working-directory: ./docker
+        run: docker build --target test -t ${{ env.IMAGE_TEST }} .
 
       - name: Run tests
-        run: docker run --rm --network host myapp:test
+        run: docker run --rm \
+          --network host \
+          -e DB_HOST=localhost \
+          -e DB_PORT=5432 \
+          -e DB_NAME=kubsu \
+          -e DB_USER=kubsu \
+          -e DB_PASSWORD=kubsu \
+          ${{ env.IMAGE_TEST }}
 
   deploy:
     runs-on: [ self-hosted, linux, x64 ]
