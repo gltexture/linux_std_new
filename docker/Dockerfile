@@ -9,11 +9,6 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install . pytest-asyncio httpx sqlalchemy asyncpg pytest
 
 ENV PYTHONPATH=/app
-ENV DATABASE_URL=postgresql://kubsu:kubsu@localhost:5432/kubsu
-ENV POSTGRES_HOST=localhost
-ENV POSTGRES_USER=kubsu
-ENV POSTGRES_PASSWORD=kubsu
-ENV POSTGRES_DB=kubsu
 FROM builder as test
 CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
 
