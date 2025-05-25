@@ -24,7 +24,6 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script: echo "SSH connection successful"
           timeout: 30s
-          debug: true
           
       - name: Build images
         working-directory: ./docker
