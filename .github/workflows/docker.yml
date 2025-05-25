@@ -14,16 +14,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Test SSH connection
-        uses: appleboy/ssh-action@v0.1.7
+        uses: glebarez/ssh@main
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          privateKey: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
-          script: echo "SSH connection successful"
-      
+          command: echo "SSH connection successful"
+
       - name: Build images
         working-directory: ./docker
         run: |
@@ -31,23 +31,23 @@ jobs:
           podman build -t myapp:latest .
 
       - name: Run tests on server
-        uses: appleboy/ssh-action@v0.1.7
+        uses: glebarez/ssh@main
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          privateKey: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
-          script: |
+          command: |
             podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
 
       - name: Deploy to server
-        uses: appleboy/ssh-action@v0.1.7
+        uses: glebarez/ssh@main
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          privateKey: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
-          script: |
+          command: |
             podman stop app01 || true
             podman rm app01 || true
             podman run -d \
