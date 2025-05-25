@@ -15,14 +15,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Start SSH agent and add key
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      - name: Check SSH port accessibility
+        run: |
+          echo "Checking if SSH port is reachable..."
+          curl --fail telnet://${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PORT }} || (echo "Port not reachable" && exit 1)
 
       - name: Test SSH connection
-        run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo SSH connection successful"
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: echo "SSH connection successful"
 
       - name: Build images
         working-directory: ./docker
@@ -31,14 +36,27 @@ jobs:
           podman build -t myapp:latest .
 
       - name: Run tests on server
-        run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "podman run --net=host --rm myapp:test sh -c 'pip install pytest && pytest'"
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
 
       - name: Deploy to server
-        run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
-            podman stop app01 || true &&
-            podman rm app01 || true &&
-            podman run -d --net=host --name app01 -p 8086:8086 myapp:latest
-          "
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            podman stop app01 || true
+            podman rm app01 || true
+            podman run -d \
+              --net=host \
+              --name app01 \
+              -p 8086:8086 \
+              myapp:latest
