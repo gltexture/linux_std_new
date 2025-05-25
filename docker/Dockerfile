@@ -12,7 +12,6 @@ ENV PYTHONPATH=/app
 FROM builder as test
 CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
 
-
 FROM python:3.10.2-slim
 WORKDIR /app
 
