@@ -7,44 +7,62 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_LOGIN }}/myapp
+  IMAGE_TEST: ${{ secrets.DOCKERHUB_LOGIN }}/myapp:test
+
 jobs:
   build:
     runs-on: [ self-hosted, linux, x64 ]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build images
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login docker.io -u ${{ secrets.DOCKERHUB_LOGIN }} --password-stdin
+
+      - name: Build and push images
         working-directory: ./docker
         run: |
-          podman build --target builder -t myapp:test .
-          podman build -t myapp:latest .
+          podman build --target builder -t docker.io/${{ env.IMAGE_TEST }} .
+          podman push docker.io/${{ env.IMAGE_TEST }}
+          podman build -t docker.io/${{ env.IMAGE_NAME }} .
+          podman push docker.io/${{ env.IMAGE_NAME }}
 
   test:
     runs-on: [ self-hosted, linux, x64 ]
     needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Run tests
+    steps:
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_ACCESS }}" | podman login docker.io -u ${{ secrets.DOCKERHUB_LOGIN }} --password-stdin
+
+      - name: Pull and test image
         run: |
-          podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
+          podman pull docker.io/${{ env.IMAGE_TEST }}
+          podman run --rm --net=host docker.io/${{ env.IMAGE_TEST }} sh -c "pip install pytest && pytest"
 
   deploy:
     runs-on: [ self-hosted, linux, x64 ]
     needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Deploy container
-        run: |
-          podman stop app01 || true
-          podman rm -f app01 || true
-          podman run -d \
-            --net=host \
-            --replace \
-            --name app01 \
-            -p 8086:8086 \
-            myapp:latest
+    steps:
+      - name: SSH and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login docker.io -u ${{ secrets.DOCKERHUB_LOGIN }} --password-stdin
+            podman pull docker.io/${{ env.IMAGE_NAME }}
+            podman stop app01 || true
+            podman rm -f app01 || true
+            podman run -d \
+              --net=host \
+              --replace \
+              --name app01 \
+              -p 8086:8086 \
+              docker.io/${{ env.IMAGE_NAME }}
