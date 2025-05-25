@@ -18,7 +18,7 @@ jobs:
       - name: Check SSH port accessibility
         run: |
           echo "Checking if SSH port is reachable..."
-          curl --fail telnet://${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PORT }} || (echo "Port not reachable" && exit 1)
+          curl --fail telnet://${{ secrets.DEPLOY_HOST }}:22 || (echo "Port not reachable" && exit 1)
 
       - name: Test SSH connection
         uses: appleboy/ssh-action@v0.1.7
