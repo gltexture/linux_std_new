@@ -8,9 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-and-deploy:
+  build:
     runs-on: [ self-hosted, linux, x64 ]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,16 +20,31 @@ jobs:
           podman build --target builder -t myapp:test .
           podman build -t myapp:latest .
 
+  test:
+    runs-on: [ self-hosted, linux, x64 ]
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Run tests
         run: |
           podman run --net=host --rm myapp:test sh -c "pip install pytest && pytest"
 
-      - name: Deploy
+  deploy:
+    runs-on: [ self-hosted, linux, x64 ]
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy container
         run: |
           podman stop app01 || true
           podman rm -f app01 || true
           podman run -d \
             --net=host \
+            --replace \
             --name app01 \
             -p 8086:8086 \
             myapp:latest
