@@ -15,34 +15,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Test SSH connection via plain ssh
+      - name: Test SSH connection (one-liner)
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USERNAME: ${{ secrets.DEPLOY_USER }}
           PORT: ${{ secrets.DEPLOY_PORT }}
-          PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          # Сохраняем ключ
-          echo "$PRIVATE_KEY" > key.pem
-          chmod 600 key.pem
-      
-          echo "Пытаемся подключиться к ${HOST}:${PORT} как ${USERNAME}…"
-      
-          # Однострочный вызов ssh без backslashes и комментариев внутри
-          ssh -i key.pem \
-              -p "${PORT}" \
-              -o BatchMode=yes \
-              -o ConnectTimeout=15 \
-              -o StrictHostKeyChecking=no \
-              "${USERNAME}@${HOST}" exit
-          STATUS=$?
-      
-          if [ $STATUS -eq 0 ]; then
-            echo "✅ SSH connection successful"
-          else
-            echo "❌ SSH connection failed (exit code $STATUS)"
-            exit $STATUS
-          fi
+          echo "$SSH_KEY" > key.pem && chmod 600 key.pem && \
+          ssh -i key.pem -p "$PORT" -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=no "$USERNAME@$HOST" exit \
+          && echo "✅ SSH connection successful" || echo "❌ SSH connection failed"
+
     
       - name: Test SSH connection
         uses: appleboy/ssh-action@master
