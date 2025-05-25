@@ -64,7 +64,7 @@ jobs:
       - name: SSH and deploy container on remote server
         uses: appleboy/ssh-action@master
         with:
-          host: localhost
+          host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
