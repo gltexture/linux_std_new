@@ -54,14 +54,7 @@ jobs:
         run: docker build --target test -t ${{ env.IMAGE_TEST }} .
 
       - name: Run tests
-        run: docker run --rm \
-          --network host \
-          -e DB_HOST=localhost \
-          -e DB_PORT=5432 \
-          -e DB_NAME=kubsu \
-          -e DB_USER=kubsu \
-          -e DB_PASSWORD=kubsu \
-          ${{ env.IMAGE_TEST }}
+        run: docker run --rm --network host ${{ env.IMAGE_TEST }}
 
   deploy:
     runs-on: [ self-hosted, linux, x64 ]
