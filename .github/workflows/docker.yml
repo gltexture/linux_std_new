@@ -15,9 +15,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Prepare known_hosts
-        run: echo "${{ secrets.KNOWN_HOSTS }}" > known_hosts
-  
+      - name: Test SSH connection via plain ssh
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          # Сохраняем ключ и даём правильные права
+          echo "$PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+      
+          echo "Пробуем подключиться к $HOST:$PORT..."
+          if ssh \
+               -i key.pem \
+               -p "$PORT" \
+               -o BatchMode=yes \            # не запрашивать пароль
+               -o ConnectTimeout=15 \        # таймаут TCP-сборки
+               -o StrictHostKeyChecking=no \ # не требовать known_hosts
+               "$USER@$HOST" exit; then
+            echo "✅ SSH connection successful"
+          else
+            echo "❌ SSH connection failed"
+            exit 1
+          fi
+    
       - name: Test SSH connection
         uses: appleboy/ssh-action@master
         with:
@@ -27,8 +49,6 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script: echo "SSH connection successful"
           timeout: 30s
-          known_hosts: known_hosts
-          host_key_check: true
     
       - name: Build images
         working-directory: ./docker
