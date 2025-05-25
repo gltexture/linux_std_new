@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, linux, x64 ]
 
     steps:
       - name: Checkout code
@@ -24,7 +24,7 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script: echo "SSH connection successful"
           timeout: 30s
-    
+
       - name: Build images
         working-directory: ./docker
         run: |
