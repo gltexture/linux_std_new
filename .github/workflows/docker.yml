@@ -28,7 +28,7 @@ jobs:
       - name: Deploy
         run: |
           podman stop app01 || true
-          podman rm app01 || true
+          podman rm -f app01 || true
           podman run -d \
             --net=host \
             --name app01 \
