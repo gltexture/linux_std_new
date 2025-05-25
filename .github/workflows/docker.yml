@@ -19,10 +19,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Login to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
-            -u "${{ secrets.DOCKERHUB_LOGIN }}" \
-            --password-stdin docker.io
+        run: docker login -u ${{ secrets.DOCKERHUB_LOGIN }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push images
         working-directory: ./docker
