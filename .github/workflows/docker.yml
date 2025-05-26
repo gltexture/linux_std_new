@@ -32,8 +32,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    container:
-      image: s177250/myapp:test
     services:
       postgres:
         image: postgres:13
@@ -48,10 +46,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v3
-  
-      - name: Redirect localhost to postgres
-        run: |
-          echo "127.0.0.1 postgres" >> /etc/hosts
   
       - name: Run tests
         env:
