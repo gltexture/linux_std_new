@@ -39,20 +39,23 @@ jobs:
           POSTGRES_DB: kubsu
           POSTGRES_USER: kubsu
           POSTGRES_PASSWORD: kubsu
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v3
-  
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build test image
+        working-directory: ./docker
+        run: docker build --target test -t ${{ env.IMAGE_TEST }} .
+
       - name: Run tests
-        env:
-          DATABASE_URL: postgresql://kubsu:kubsu@localhost:5432/kubsu
-        run: |
-          cd /app
-          pytest -v ./tests/
+        run: docker run --rm --network host ${{ env.IMAGE_TEST }}
 
   deploy:
     runs-on: self-hosted
