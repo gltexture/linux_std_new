@@ -61,14 +61,16 @@ jobs:
     runs-on: self-hosted
     needs: test
     steps:
-    - name: SSH into remote server and deploy
-      uses: maddox/actions/ssh@master
-      with:
-        host: ${{ secrets.DEPLOY_HOST }}
-        port: ${{ secrets.DEPLOY_PORT }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_SSH_KEY }}
-        script: |
-          echo 'ffff'
-
-
+      - name: SSH and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            podman login -u '${{ secrets.DOCKERHUB_LOGIN }}' -p '${{ secrets.DOCKERHUB_ACCESS }}'
+            podman pull '${{ env.IMAGE_NAME }}'
+            podman stop app01 || true
+            podman rm -f app01 || true
+            podman run -d --net=host --replace --name app01 -p 8086:8086 '${{ env.IMAGE_NAME }}'
