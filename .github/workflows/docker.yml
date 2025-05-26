@@ -31,15 +31,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: [ build ]
+    needs: build
     container:
       image: s177250/myapp:test
-    env:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: kubsu
-      DB_USER: kubsu
-      DB_PASSWORD: kubsu
     services:
       postgres:
         image: postgres:latest
@@ -60,6 +54,8 @@ jobs:
   
       - name: Run tests
         working-directory: /app
+        env:
+          DATABASE_URL: postgresql+psycopg://kubsu:kubsu@postgres:5432/kubsu
         run: pytest -v ./tests/
 
   deploy:
