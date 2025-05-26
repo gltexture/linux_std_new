@@ -9,10 +9,6 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install . pytest-asyncio httpx sqlalchemy asyncpg pytest
 
 ENV PYTHONPATH=/app
-FROM builder as test
-EXPOSE 8086
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8086"]
-
 FROM python:3.10.2-slim
 WORKDIR /app
 
