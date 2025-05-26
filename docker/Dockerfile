@@ -10,8 +10,8 @@ RUN pip install --upgrade pip setuptools wheel && \
 
 ENV PYTHONPATH=/app
 FROM builder as test
-CMD ["pytest", "tests/", "--maxfail=1", "--disable-warnings", "-q"]
-
+EXPOSE 8086
+CMD bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8086 & sleep 3 && pytest -v tests/"
 
 FROM python:3.10.2-slim
 WORKDIR /app
