@@ -55,7 +55,7 @@ jobs:
         working-directory: /app
         run: |
           export DB_HOST=postgres
-          run: pytest -v ./tests/
+          pytest -v ./tests/
 
   deploy:
     runs-on: self-hosted
