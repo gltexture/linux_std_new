@@ -11,7 +11,7 @@ RUN pip install --upgrade pip setuptools wheel && \
 ENV PYTHONPATH=/app
 FROM builder as test
 EXPOSE 8086
-CMD bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8086 & sleep 3 && pytest -v tests/"
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8086"]
 
 FROM python:3.10.2-slim
 WORKDIR /app
