@@ -38,8 +38,6 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_HOST: postgres
-          POSTGRES_PORT: 5432
           POSTGRES_DB: kubsu
           POSTGRES_USER: kubsu
           POSTGRES_PASSWORD: kubsu
@@ -51,9 +49,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
   
+      - name: Redirect localhost to postgres
+        run: |
+          echo "127.0.0.1 postgres" >> /etc/hosts
+  
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://kubsu:kubsu@postgres:5432/kubsu
+          DATABASE_URL: postgresql://kubsu:kubsu@localhost:5432/kubsu
         run: |
           cd /app
           pytest -v ./tests/
