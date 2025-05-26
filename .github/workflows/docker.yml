@@ -38,6 +38,8 @@ jobs:
       postgres:
         image: postgres:13
         env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
           POSTGRES_DB: kubsu
           POSTGRES_USER: kubsu
           POSTGRES_PASSWORD: kubsu
