@@ -61,7 +61,7 @@ jobs:
     runs-on: self-hosted
     needs: test
     steps:
-      - name: SSH and deploy
+      - name: SSH, deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DEPLOY_HOST }}
