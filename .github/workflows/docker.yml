@@ -37,16 +37,16 @@ jobs:
     env:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: ${{ secrets.TEST_DB_NAME }}
-      DB_USER: ${{ secrets.TEST_DB_USER }}
-      DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+      DB_NAME: kubsu
+      DB_USER: kubsu
+      DB_PASSWORD: kubsu
     services:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
-          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_DB: kubsu
+          POSTGRES_USER: kubsu
+          POSTGRES_PASSWORD: kubsu
         ports:
           - 5432:5432
         options: >-
