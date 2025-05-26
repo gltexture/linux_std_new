@@ -48,7 +48,6 @@ jobs:
           --health-retries 5
     container:
       image: s177250/myapp:test
-      options: --network=host
     steps:
       - name: Checkout
         uses: actions/checkout@v3
