@@ -3,13 +3,13 @@ WORKDIR /app
 
 COPY pyproject.toml .
 COPY src/ ./src
-COPY tests/ ./tests
 
 RUN pip install --upgrade pip setuptools wheel && \
     pip install . pytest-asyncio httpx sqlalchemy asyncpg pytest
 
 ENV PYTHONPATH=/app
 FROM builder as test
+COPY tests/ ./tests
 EXPOSE 8086
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8086"]
 
