@@ -34,7 +34,6 @@ jobs:
     needs: build
     container:
       image: s177250/myapp:test
-      options: --network host
     services:
       postgres:
         image: postgres:13
