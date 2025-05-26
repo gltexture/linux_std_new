@@ -32,6 +32,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      IMAGE_TEST: ${{ secrets.DOCKERHUB_LOGIN }}/myapp:test
     container:
       image: ${{ env.IMAGE_TEST }}
       options: --network host
