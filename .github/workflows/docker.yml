@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ${{ secrets.DOCKERHUB_LOGIN }}/myapp:test
+      image: s177250/myapp:test
       options: --network host
     services:
       postgres:
